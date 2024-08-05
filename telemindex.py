@@ -84,7 +84,7 @@ with col1:
             st.write(pt6_trans,)
         with col4:
             with st.expander("Nota sobre la Fórmula de indexado:"):
-                st.caption("No se incluye fnee, desvíos ni margen. Añadir margen al gusto en 'opciones' de la barra lateral")
+                st.caption("Se incluye fnee, SRAD y 2€ en desvíos. Añadir margen al gusto en 'opciones' de la barra lateral")
     
     if st.checkbox ('Mostrar tabla de datos de la gráfica'): 
         st.write(pt1_trans2)
