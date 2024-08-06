@@ -55,8 +55,11 @@ aplicar_margen(globals.mes_seleccionado,globals.margen_aplicado)
 #esta linea sobrará
 #st.sidebar.write("st.session_state object:", st.session_state)
 
-#ejecutamos la función para obtener la tabla resumen
-pt6_trans=pt5_trans()
+#ejecutamos la función para obtener la tabla resumen y precios medios
+pt6_trans, media_20,media_30,media_61=pt5_trans()
+media_20 =round(media_20 / 10,1)
+media_30 =round(media_30 / 10,1)
+media_61 =round(media_61 / 10,1)
 #ejecutamos la función para graficar
 graf_pt2=graf_pt1()
 #ejecutamos la función para obtener la tabla de valores de la gráfica
@@ -85,12 +88,21 @@ with col1:
         with col4:
             with st.expander("Nota sobre la Fórmula de indexado:"):
                 st.caption("Se incluye fnee, SRAD y 2€ en desvíos. Añadir margen al gusto en 'opciones' de la barra lateral")
+    st.subheader("Resumen de precios medios minoristas por peaje de acceso", divider='rainbow')
+    st.caption(texto_precios)
+    with st.container():
+        col5, col6,col7=st.columns(3)
+        with col5:
+            st.metric(':orange[Precio medio 2.0]',value=media_20)
+        with col6:
+            st.metric(':red[Precio medio 3.0]',value=media_30)
+        with col7:
+            st.metric(':blue[Precio medio 6.1]',value=media_61)
     
-    if st.checkbox ('Mostrar tabla de datos de la gráfica'): 
-        st.write(pt1_trans2)
 
 with col2:
     st.plotly_chart(graf_pt2)
 
-
+    if st.checkbox ('Mostrar tabla de datos de la gráfica'): 
+        st.write(pt1_trans2)
 
