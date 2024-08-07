@@ -56,10 +56,11 @@ aplicar_margen(globals.mes_seleccionado,globals.margen_aplicado)
 #st.sidebar.write("st.session_state object:", st.session_state)
 
 #ejecutamos la función para obtener la tabla resumen y precios medios
-pt6_trans, media_20,media_30,media_61=pt5_trans()
+pt6_trans, media_20,media_30,media_61,media_spot=pt5_trans()
 media_20 =round(media_20 / 10,1)
 media_30 =round(media_30 / 10,1)
 media_61 =round(media_61 / 10,1)
+media_spot=round(media_spot,2)
 #ejecutamos la función para graficar
 graf_pt2=graf_pt1()
 #ejecutamos la función para obtener la tabla de valores de la gráfica
@@ -91,13 +92,16 @@ with col1:
     st.subheader("Resumen de precios medios minoristas por peaje de acceso", divider='rainbow')
     st.caption(texto_precios)
     with st.container():
-        col5, col6,col7=st.columns(3)
+        col5, col6,col7,col8=st.columns(4)
         with col5:
             st.metric(':orange[Precio medio 2.0]',value=media_20)
         with col6:
             st.metric(':red[Precio medio 3.0]',value=media_30)
         with col7:
             st.metric(':blue[Precio medio 6.1]',value=media_61)
+        with col8:
+            st.metric(':green[Precio medio Spot €/MWh]',value=media_spot)
+        
     
 
 with col2:

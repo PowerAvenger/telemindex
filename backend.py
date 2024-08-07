@@ -108,7 +108,7 @@ def aplicar_margen(mes_seleccionado,margen_aplicado):
 # %%
 def pt1():
     dffm=filtrar_mes(globals.mes_seleccionado)
-    #texto_graf=texto_graf
+    
     pt1=dffm.pivot_table(
         values=['spot','precio_2.0','precio_3.0','precio_6.1'],
         index='hora',
@@ -190,6 +190,7 @@ def pt5_trans():
         media_20=dffm['precio_2.0'].mean()
         media_30=dffm['precio_3.0'].mean()
         media_61=dffm['precio_6.1'].mean()
+        media_spot=dffm['spot'].mean()
         precios_medios=[media_20,media_30,media_61]
         pt5_trans=pt5.transpose()
         pt5_trans['Media']=precios_medios
@@ -197,7 +198,7 @@ def pt5_trans():
         pt5_trans=pt5_trans.round(1)
         pt5_trans=pt5_trans.fillna('')
 
-        return pt5_trans, media_20,media_30,media_61
+        return pt5_trans, media_20,media_30,media_61,media_spot
 
         
 
