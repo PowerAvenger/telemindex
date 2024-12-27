@@ -76,7 +76,8 @@ st.subheader("Tu aplicación para saber los precios minoristas de indexado")
 st.caption("Copyright by Jose Vidal :ok_hand:")
 url_apps = "https://powerappspy-josevidal.streamlit.app/"
 st.write("Visita mi página de [PowerAPPs](%s) con un montón de utilidades" % url_apps)
-
+url_bluesky = 'https://bsky.app/profile/poweravenger.bsky.social'
+st.write("Recomienda, comenta y comparte en [Bluesky](%s)")
 
 col1, col2 = st.columns([.7,.3])
 
