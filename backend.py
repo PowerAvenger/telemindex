@@ -1,49 +1,34 @@
-# %% [markdown]
-# # Telemindex
-
-# %% [markdown]
-# ## Importamos librerías
-
-# %%
-#En pruebas: Uso de la variables mes_seleccionado definida en el archivo 'globals.py'
-
-# %%
 import pandas as pd
 import plotly.express as px
 import globals
+import streamlit as st
 
-# %% [markdown]
-# ## Importamos el fichero excel
+@st.cache_data()
+def leer_excel():
+    df_in=pd.read_excel('data.xlsx')
+    return df_in
 
-# %%
-df_in=pd.read_excel('data.xlsx')
-df_in
-
-# %% [markdown]
-# ## Filtramos por el año 2024
-
-# %%
-año=2024 #con cambiar este valor ya sobra para filtrar la tabla
-filtro_año=df_in['año']==año
-dffa =df_in[filtro_año].set_index('fecha')
-dffa 
-
+#año=st.session_state.año_seleccionado
+#filtro_año=df_in['año']==año
+#dffa =df_in[filtro_año].set_index('fecha')
+#dffa 
+#print(dffa)
 # %% [markdown]
 # ### Obtenemos el último registro
 
 # %%
 #usado como texto adicional en el gráfico si rango = todo el año
-max_reg=dffa.index.max().strftime('%d-%m-%Y')
-max_reg
-texto_graf=f'Último día registrado: {max_reg}'
+#max_reg=dffa.index.max().strftime('%d-%m-%Y')
+#max_reg
+#texto_graf=f'Último día registrado: {max_reg}'
 
 
 # %% [markdown]
 # ### Interacción en streamlit: Listado de meses disponibles para usar en un select_box
 
 # %%
-lista_meses=dffa['mes_nombre'].unique().tolist()
-lista_meses
+#lista_meses=dffa['mes_nombre'].unique().tolist()
+#lista_meses
 
 # %%
 orden_meses = {
@@ -62,8 +47,8 @@ orden_meses = {
 }
 
 # %%
-lista_meses=sorted(lista_meses,key=lambda x:orden_meses[x])
-lista_meses
+#lista_meses=sorted(lista_meses,key=lambda x:orden_meses[x])
+#lista_meses
 
 # %% [markdown]
 # ## Telemindex horario para streamlit
@@ -72,49 +57,50 @@ lista_meses
 # ### Inicializamos dffm, que es el la tabla filtrada por el usuario
 
 # %%
-dffa_copia=dffa.copy()
+#dffa_copia=dffa.copy()
 
 # %% [markdown]
 # ## Filtramos el mes seleccionado por el usuario
 
 # %%
-def filtrar_mes(mes_seleccionado=None):
-        if mes_seleccionado is None: 
-                dffm=dffa_copia
-        else:
-                mes_filtro=dffa_copia['mes_nombre']==mes_seleccionado
-                dffm=dffa_copia[mes_filtro]
-                #texto_graf=f'{mes}'
-        return dffm #,texto_graf
+def filtrar_mes():
+    df_in = leer_excel()
+    if st.session_state.mes_seleccionado is None: 
+        df_filtrado = df_in[df_in['año'] == st.session_state.año_seleccionado]
+    else:
+        df_filtrado = df_in[df_in['año'] == st.session_state.año_seleccionado & df_in['mes_nombre'] == st.session_state.mes_seleccionado]
+
+    df_filtrado.set_index('fecha', inplace = True)
+    max_reg=df_filtrado.index.max().strftime('%d-%m-%Y')
+    lista_meses=df_filtrado['mes_nombre'].unique().tolist()
+          
+    return df_filtrado, max_reg, lista_meses 
         
 
 
-# %%
-def aplicar_margen(mes_seleccionado,margen_aplicado):
-    dffa_copia['precio_2.0']=dffa['precio_2.0'] #+=margen_aplicado #=dffm['precio_2.0']+margen
-    dffa_copia['precio_3.0']=dffa['precio_3.0'] #+=margen_aplicado #dffm['precio_3.0']+margen
-    dffa_copia['precio_6.1']=dffa['precio_6.1'] #+=margen_aplicado #dffm['precio_6.1']+margen
-    dffa_copia['precio_2.0']+=margen_aplicado #=dffm['precio_2.0']+margen
-    dffa_copia['precio_3.0']+=margen_aplicado #dffm['precio_3.0']+margen
-    dffa_copia['precio_6.1']+=margen_aplicado #dffm['precio_6.1']+margen
+def aplicar_margen():
     
-    filtrar_mes(mes_seleccionado)
-
+    df_filtrado = filtrar_mes()[0]
+    dffa_copia = df_filtrado.copy()
+    dffa_copia['precio_2.0']=df_filtrado['precio_2.0'] #+=margen_aplicado #=dffm['precio_2.0']+margen
+    dffa_copia['precio_3.0']=df_filtrado['precio_3.0'] #+=margen_aplicado #dffm['precio_3.0']+margen
+    dffa_copia['precio_6.1']=df_filtrado['precio_6.1'] #+=margen_aplicado #dffm['precio_6.1']+margen
+    dffa_copia['precio_2.0']+=st.session_state.margen
+    dffa_copia['precio_3.0']+=st.session_state.margen
+    dffa_copia['precio_6.1']+=st.session_state.margen
+    
     return dffa_copia
 
-# %% [markdown]
-# ### De esta tabla sale el gráfico
 
-# %%
 def pt1():
-    dffm=filtrar_mes(globals.mes_seleccionado)
+    dffm = aplicar_margen()
     
     pt1=dffm.pivot_table(
         values=['spot','precio_2.0','precio_3.0','precio_6.1'],
         index='hora',
         aggfunc='mean'
     ).reset_index()
-
+    print(pt1)
     pt20=dffm.pivot_table(
         values=['spot', 'ssaa', 'osom', 'Otros', 'ppcc_2.0', 'perd_2.0', 'pyc_2.0'],
         index='año',
@@ -124,7 +110,7 @@ def pt1():
     pt20['perdidas_2.0']=pt20['comp_perd']*(pt20['perd_2.0'])
     pt20=pt20.drop(columns=['perd_2.0','comp_perd'])
     pt20_trans=pt20.transpose().reset_index()
-    pt20_trans=pt20_trans.rename(columns={'index':'componente',2024:'valor'})
+    pt20_trans=pt20_trans.rename(columns={'index':'componente',st.session_state.año_seleccionado:'valor'})
     pt20_trans['componente'] = pt20_trans['componente'].replace({'Otros': 'otros'})
     pt20_trans=pt20_trans.sort_values(by='valor',ascending=False)
     pt20_trans['valor']=round(pt20_trans['valor'],2)
@@ -142,7 +128,7 @@ def pt1():
     pt30['perdidas_3.0']=pt30['comp_perd']*(pt30['perd_3.0'])
     pt30=pt30.drop(columns=['perd_3.0','comp_perd'])
     pt30_trans=pt30.transpose().reset_index()
-    pt30_trans=pt30_trans.rename(columns={'index':'componente',2024:'valor'})
+    pt30_trans=pt30_trans.rename(columns={'index':'componente',st.session_state.año_seleccionado:'valor'})
     pt30_trans['componente'] = pt30_trans['componente'].replace({'Otros': 'otros'})
     pt30_trans=pt30_trans.sort_values(by='valor',ascending=False)
     pt30_trans['valor']=round(pt30_trans['valor'],2)
@@ -160,7 +146,7 @@ def pt1():
     pt61['perdidas_6.1']=pt61['comp_perd']*(pt61['perd_6.1'])
     pt61=pt61.drop(columns=['perd_6.1','comp_perd'])
     pt61_trans=pt61.transpose().reset_index()
-    pt61_trans=pt61_trans.rename(columns={'index':'componente',2024:'valor'})
+    pt61_trans=pt61_trans.rename(columns={'index':'componente',st.session_state.año_seleccionado:'valor'})
     pt61_trans['componente'] = pt61_trans['componente'].replace({'Otros': 'otros'})
     pt61_trans=pt61_trans.sort_values(by='valor',ascending=False)
     pt61_trans['valor']=round(pt61_trans['valor'],2)
@@ -171,13 +157,7 @@ def pt1():
     
     return pt1, graf20, graf30, graf61
 
-# %%
-pt1()
 
-# %% [markdown]
-# ### Transponemos para visualizar en stremalit
-
-# %%
 def pt1_trans():
     pt2=pt1()[0]
     pt1_trans=pt2.transpose()
@@ -187,18 +167,15 @@ def pt1_trans():
     
     return pt1_trans
 
-# %% [markdown]
-# ### Gráfico de salida para visualizar en streamlit
 
-# %%
 def graf_pt1():
     pt2=pt1()[0]
     colores_precios = {'precio_2.0': 'goldenrod', 'precio_3.0': 'darkred', 'precio_6.1': 'blue'}
     graf_pt1=px.line(pt2,x='hora',y=['precio_2.0','precio_3.0','precio_6.1'],
         height=600,
         #width=1000,
-        title="Telemindex 2024: Precios medios horarios de indexado según tarifas de acceso",
-        labels={'value':'€/MWh','variable':'Precios s/ ATR'},
+        title=f'Telemindex {st.session_state.año_seleccionado}: Precios medios horarios de indexado según tarifas de acceso',
+        labels={'value':'€/MWh','variable':'Precios según ATR'},
         color_discrete_map=colores_precios,
     )
     graf_pt1.update_traces(line=dict(width=4))
@@ -208,7 +185,7 @@ def graf_pt1():
             x=0.5,
             y=1.05,
             showarrow=False,
-            text=texto_graf,
+            #text=texto_graf,
             xref="paper",
             yref="paper"
         )
@@ -222,17 +199,14 @@ def graf_pt1():
               tickvals=pt2['hora']
         )
     )
-    graf_pt1=graf_pt1.add_bar(y=pt2['spot'], name='spot', marker_color='green', width=0.5)
+    graf_pt1 = graf_pt1.add_bar(y=pt2['spot'], name='spot', marker_color='green', width=0.5)
     
     return graf_pt1
 
-# %% [markdown]
-# ## Obtención de la tabla resumen de precios
 
-# %%
-#dffm=filtrar_mes(globals.mes_seleccionado)
+
 def pt5_trans():
-        dffm=filtrar_mes(globals.mes_seleccionado)    
+        dffm=aplicar_margen()
         pt3=dffm.pivot_table(
                 values=['precio_2.0'],
                 aggfunc='mean',
