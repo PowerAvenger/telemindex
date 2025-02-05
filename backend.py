@@ -5,6 +5,11 @@ import streamlit as st
 @st.cache_data()
 def leer_excel():
     df_in = pd.read_excel('data.xlsx')
+    columnas_precios = ['pyc_2.0', 'pyc_3.0', 'pyc_6.1', 'precio_2.0', 'precio_3.0', 'precio_6.1']
+    df_in[columnas_precios] = df_in[columnas_precios].apply(pd.to_numeric, errors='coerce')
+    df_in['coste_2.0'] = df_in['precio_2.0'] - df_in['pyc_2.0']
+    df_in['coste_3.0'] = df_in['precio_3.0'] - df_in['pyc_3.0']
+    df_in['coste_6.1'] = df_in['precio_6.1'] - df_in['pyc_6.1']
     return df_in
 
 orden_meses = {
@@ -125,8 +130,8 @@ def pt1(df_in):
     return pt1, graf20, graf30, graf61
 
 
-def pt1_trans():
-    pt2=pt1()[0]
+def pt1_trans(df_in):
+    pt2=pt1(df_in)[0]
     pt1_trans=pt2.transpose()
     pt1_trans=pt1_trans.drop(['hora'])
     pt1_trans.columns.name='peajes'
@@ -196,9 +201,71 @@ def pt5_trans(df_in):
         pt5_trans['Media']=precios_medios
         pt5_trans=pt5_trans.div(10)
         pt5_trans=pt5_trans.round(1)
-        pt5_trans=pt5_trans.fillna('')
+        
+        pt5_trans = pt5_trans.apply(pd.to_numeric, errors='coerce')
+        #pt5_trans = pt5_trans.astype(object).where(pt5_trans.notna(), '')
 
         return pt5_trans, media_20,media_30,media_61,media_spot
+
+def costes_indexado(df_in):
+        dffm=aplicar_margen(df_in)
+        pt3=dffm.pivot_table(
+                values=['coste_2.0'],
+                aggfunc='mean',
+                index='dh_3p'
+                )
+        pt4=dffm.pivot_table(
+                values=['coste_3.0','coste_6.1'],
+                aggfunc='mean',
+                index='dh_6p',
+                )
+        pt5=pd.concat([pt3,pt4],axis=1)
+        
+        
+        media_20=dffm['coste_2.0'].mean()
+        media_30=dffm['coste_3.0'].mean()
+        media_61=dffm['coste_6.1'].mean()
+        #media_spot=dffm['spot'].mean()
+        precios_medios = [media_20, media_30, media_61]
+        pt5_trans = pt5.transpose()
+        pt5_trans['Media'] = precios_medios
+        pt5_trans=pt5_trans.div(10)
+        pt5_trans=pt5_trans.round(1)
+        
+        pt5_trans = pt5_trans.apply(pd.to_numeric, errors='coerce')
+        #pt5_trans = pt5_trans.astype(object).where(pt5_trans.notna(), '')
+
+        return pt5_trans
+
+# TABLA RESUMEN DE PEAJES Y CARGOS
+def pt7_trans(df_in):
+        dffm=aplicar_margen(df_in)
+        pt3=dffm.pivot_table(
+                values=['pyc_2.0'],
+                aggfunc='mean',
+                index='dh_3p'
+                )
+        pt4=dffm.pivot_table(
+                values=['pyc_3.0','pyc_6.1'],
+                aggfunc='mean',
+                index='dh_6p',
+                )
+        pt5=pd.concat([pt3,pt4],axis=1)
+        
+        
+        media_20 = dffm['pyc_2.0'].mean()
+        media_30 = dffm['pyc_3.0'].mean()
+        media_61 = dffm['pyc_6.1'].mean()
+        #media_spot=dffm['spot'].mean()
+        precios_medios = [media_20, media_30, media_61]
+        pt5_trans = pt5.transpose()
+        pt5_trans['Media']=precios_medios
+        pt5_trans = pt5_trans.div(10)
+        pt5_trans = pt5_trans.round(1)
+        pt5_trans = pt5_trans.apply(pd.to_numeric, errors='coerce')
+        #pt5_trans=pt5_trans.fillna('')
+
+        return pt5_trans #, media_20,media_30,media_61,media_spot
 
         
 

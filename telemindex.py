@@ -1,5 +1,6 @@
 import streamlit as st
-from backend import leer_excel, filtrar_mes, aplicar_margen, pt1_trans, graf_pt1, pt5_trans, pt1
+from backend import leer_excel, filtrar_mes, aplicar_margen, pt1_trans, graf_pt1, pt5_trans, pt1, pt7_trans, costes_indexado
+import pandas as pd
 
 
 st.set_page_config(
@@ -49,13 +50,15 @@ else:
 
 
 #ejecutamos la función para obtener la tabla resumen y precios medios
-pt6_trans, media_20, media_30, media_61, media_spot=pt5_trans(df_in)
+tabla_precios, media_20, media_30, media_61, media_spot = pt5_trans(df_in)
 media_20 = round(media_20 / 10, 1)
 media_30 = round(media_30 / 10, 1)
 media_61 = round(media_61 / 10, 1)
 media_spot = round(media_spot, 2)
-#ejecutamos la función para graficar
-#graf_pt2=graf_pt1()
+
+#tabla resumen de costes ATR
+tabla_atr = pt7_trans(df_in)
+tabla_costes = costes_indexado(df_in)
 
 
 
@@ -103,18 +106,45 @@ with col1:
 with col2:
     
     st.subheader("Tabla resumen de precios por peaje de acceso", divider='rainbow')
+    with st.expander("Nota sobre los precios de indexado:"):
+        st.caption("Basados en las fórmulas tipo con todos los componentes de mercado y costes regulados. Se incluye FNEE, SRAD y 2€ en desvíos. Por supuesto peajes y cargos según tarifa de acceso. Añadir margen al gusto en 'Opciones' de la barra lateral")
+        
     with st.container():
-        #col3, col4=st.columns([0.65,0.35])
-        #with col3:
+
+        tabla_margen = pd.DataFrame(columns = tabla_precios.columns, index = ['margen_2.0', 'margen_3.0', 'margen_6.1'])
+        tabla_margen = tabla_margen.fillna(st.session_state.margen / 10)
+
+        # Extraer el índice común (2.0, 3.0, 6.1) de los nombres de las filas
+        #indices = ["2.0", "3.0", "6.1"]
+        #for i in indices:
+        #    tabla_atr.loc[f"pyc_{i}", "Media"] = (
+        #        tabla_precios.loc[f"precio_{i}", "Media"] - tabla_costes.loc[f"coste_{i}", "Media"] - tabla_margen.loc[f"margen_{i}", "Media"]
+        #        )
+            
         texto_precios=f'{texto_precios}. Precios en c€/kWh'
         st.caption(texto_precios)
-        st.write(pt6_trans,)
+
+        st.text ('Precios medios de indexado', help='PRECIO MEDIO (FINAL) DE LA ENERGÍA.Suma de costes (energía y ATR)')
+        st.dataframe(tabla_precios, use_container_width=True)
+        
+        st.text ('Costes medios de indexado', help = 'COSTE MEDIO DE LA ENERGÍA, sin incluir ATR.')
+        st.dataframe(tabla_costes, use_container_width=True)
+        
+        st.text ('Costes de ATR')
+        #tabla_atr['Media'] = (tabla_precios['Media'] - tabla_costes['Media']).fillna(0)
+        st.dataframe(tabla_atr, use_container_width=True )
+        
+        st.text ('Margen')
+        st.dataframe(tabla_margen, use_container_width=True )
+
+
+        print(tabla_precios)
+        print(tabla_costes)
+        print(tabla_atr)
         #with col4:
-        with st.expander("Nota sobre la Fórmula de indexado:"):
-            st.caption("Se incluye FNEE, SRAD y 2€ en desvíos. Añadir margen al gusto en 'opciones' de la barra lateral")
-        if st.checkbox ('Mostrar tabla de datos de la gráfica'):
+        #if st.checkbox ('Mostrar tabla de datos de la gráfica'):
             #ejecutamos la función para obtener la tabla de valores de la gráfica 
-            st.write(pt1_trans())
+        #    st.write(pt1_trans(df_in))
 
 
 
