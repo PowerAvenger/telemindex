@@ -1,15 +1,5 @@
 import streamlit as st
-import pandas as pd
-import plotly.express as px
-import globals
-
-if 'año_seleccionado' not in st.session_state:
-    st.session_state.año_seleccionado = 2025
-if 'mes_seleccionado' not in st.session_state: 
-    st.session_state.mes_seleccionado= None
-
-from backend import filtrar_mes, aplicar_margen, pt1_trans, graf_pt1, pt5_trans, pt1 #max_reg,
-
+from backend import leer_excel, filtrar_mes, aplicar_margen, pt1_trans, graf_pt1, pt5_trans, pt1
 
 
 st.set_page_config(
@@ -23,29 +13,35 @@ st.set_page_config(
     )
 
 
+# Inicializamos variables
+if 'año_seleccionado' not in st.session_state:
+    st.session_state.año_seleccionado = 2025
+if 'mes_seleccionado' not in st.session_state: 
+    st.session_state.mes_seleccionado = None
 if 'margen' not in st.session_state: 
     st.session_state.margen = 0
 
 
-
-df_filtrado, max_reg, lista_meses = filtrar_mes()
+# Cargamos datos
+df_in = leer_excel()
+df_filtrado, max_reg, lista_meses = filtrar_mes(df_in)
 
 #ELEMENTOS DE LA BARRA LATERAL ---------------------------------------------------------------------------------------
 
 st.sidebar.subheader('Opciones')
-st.sidebar.selectbox('Seleccione el año', options=[2025,2024,2023], key='año_seleccionado')
+st.sidebar.selectbox('Seleccione el año', options = [2025,2024,2023], key = 'año_seleccionado')
 #seleccion del año completo o por meses
-rango=st.sidebar.radio("Seleccionar rango temporal", ['Año completo', 'Por meses'], key="rango_temporal")
+rango = st.sidebar.radio("Seleccionar rango temporal", ['Año completo', 'Por meses'], key = "rango_temporal")
 if rango =='Por meses' : 
-    st.sidebar.selectbox('Seleccionar mes', lista_meses, key='mes_seleccionado')
+    st.sidebar.selectbox('Seleccionar mes', lista_meses, key = 'mes_seleccionado')
     texto_precios = f'Mes seleccionado: {st.session_state.mes_seleccionado}'
-elif rango=='Año completo':
-    st.session_state.mes_seleccionado=None  
+elif rango == 'Año completo':
+    st.session_state.mes_seleccionado = None  
     texto_precios = f'Año {st.session_state.año_seleccionado}, hasta el día {max_reg}'
 
 
 if st.sidebar.checkbox('Marca si quieres añadir margen'):
-    st.sidebar.slider("Añadir margen al gusto (en €/MWh)", min_value = 0, max_value = 50,value = 0, key = 'margen', on_change = aplicar_margen) 
+    st.sidebar.slider("Añadir margen al gusto (en €/MWh)", min_value = 0, max_value = 50,value = 0, key = 'margen', on_change = aplicar_margen, args=(df_in,) )
     texto_margen=f'Se ha añadido {st.session_state.margen} €/MWh'
     st.sidebar.caption(texto_margen)
 else:
@@ -53,7 +49,7 @@ else:
 
 
 #ejecutamos la función para obtener la tabla resumen y precios medios
-pt6_trans, media_20, media_30, media_61, media_spot=pt5_trans()
+pt6_trans, media_20, media_30, media_61, media_spot=pt5_trans(df_in)
 media_20 = round(media_20 / 10, 1)
 media_30 = round(media_30 / 10, 1)
 media_61 = round(media_61 / 10, 1)
@@ -91,10 +87,10 @@ with col1:
         with col8:
             st.metric(':green[Precio medio Spot €/MWh]',value=media_spot)
     st.empty()
-    st.plotly_chart(graf_pt1())
+    st.plotly_chart(graf_pt1(df_in))
     st.empty()
     st.subheader("Peso de los componentes por peaje de acceso", divider='rainbow')
-    _, graf20, graf30, graf61=pt1()
+    _, graf20, graf30, graf61=pt1(df_in)
     col10,col11,col12=st.columns(3)
     with col10:
         st.write(graf20)    

@@ -1,36 +1,12 @@
 import pandas as pd
 import plotly.express as px
-import globals
 import streamlit as st
 
 @st.cache_data()
 def leer_excel():
-    df_in=pd.read_excel('data.xlsx')
+    df_in = pd.read_excel('data.xlsx')
     return df_in
 
-#año=st.session_state.año_seleccionado
-#filtro_año=df_in['año']==año
-#dffa =df_in[filtro_año].set_index('fecha')
-#dffa 
-#print(dffa)
-# %% [markdown]
-# ### Obtenemos el último registro
-
-# %%
-#usado como texto adicional en el gráfico si rango = todo el año
-#max_reg=dffa.index.max().strftime('%d-%m-%Y')
-#max_reg
-#texto_graf=f'Último día registrado: {max_reg}'
-
-
-# %% [markdown]
-# ### Interacción en streamlit: Listado de meses disponibles para usar en un select_box
-
-# %%
-#lista_meses=dffa['mes_nombre'].unique().tolist()
-#lista_meses
-
-# %%
 orden_meses = {
     'enero': 1,
     'febrero': 2,
@@ -46,41 +22,32 @@ orden_meses = {
     'diciembre': 12
 }
 
-# %%
-#lista_meses=sorted(lista_meses,key=lambda x:orden_meses[x])
-#lista_meses
+def filtrar_mes(df_in):
 
-# %% [markdown]
-# ## Telemindex horario para streamlit
-
-# %% [markdown]
-# ### Inicializamos dffm, que es el la tabla filtrada por el usuario
-
-# %%
-#dffa_copia=dffa.copy()
-
-# %% [markdown]
-# ## Filtramos el mes seleccionado por el usuario
-
-# %%
-def filtrar_mes():
-    df_in = leer_excel()
+    
+    df_filtrado_año = df_in[df_in['año'] == st.session_state.año_seleccionado]
+    df_filtrado_año.set_index('fecha', inplace = True)
+    print (df_filtrado_año)
+    
     if st.session_state.mes_seleccionado is None: 
-        df_filtrado = df_in[df_in['año'] == st.session_state.año_seleccionado]
+        df_filtrado = df_filtrado_año[df_filtrado_año['año'] == st.session_state.año_seleccionado]
     else:
-        df_filtrado = df_in[df_in['año'] == st.session_state.año_seleccionado & df_in['mes_nombre'] == st.session_state.mes_seleccionado]
+        df_filtrado = df_filtrado_año[(df_filtrado_año['año'] == st.session_state.año_seleccionado) & (df_filtrado_año['mes_nombre'] == st.session_state.mes_seleccionado)]
 
-    df_filtrado.set_index('fecha', inplace = True)
-    max_reg=df_filtrado.index.max().strftime('%d-%m-%Y')
-    lista_meses=df_filtrado['mes_nombre'].unique().tolist()
+    #df_filtrado.set_index('fecha', inplace = True)
+    print (df_filtrado)
+    #max_reg = df_filtrado_año.index.max().strftime('%d-%m-%Y')
+    max_reg = pd.to_datetime(df_filtrado_año.index.max()).strftime('%d-%m-%Y')
+    print (df_filtrado_año.index.max())
+    lista_meses = df_filtrado_año['mes_nombre'].unique().tolist()
           
     return df_filtrado, max_reg, lista_meses 
         
 
 
-def aplicar_margen():
+def aplicar_margen(df_in):
     
-    df_filtrado = filtrar_mes()[0]
+    df_filtrado = filtrar_mes(df_in)[0]
     dffa_copia = df_filtrado.copy()
     dffa_copia['precio_2.0']=df_filtrado['precio_2.0'] #+=margen_aplicado #=dffm['precio_2.0']+margen
     dffa_copia['precio_3.0']=df_filtrado['precio_3.0'] #+=margen_aplicado #dffm['precio_3.0']+margen
@@ -92,15 +59,15 @@ def aplicar_margen():
     return dffa_copia
 
 
-def pt1():
-    dffm = aplicar_margen()
+def pt1(df_in):
+    dffm = aplicar_margen(df_in)
     
     pt1=dffm.pivot_table(
         values=['spot','precio_2.0','precio_3.0','precio_6.1'],
         index='hora',
         aggfunc='mean'
     ).reset_index()
-    print(pt1)
+    #print(pt1)
     pt20=dffm.pivot_table(
         values=['spot', 'ssaa', 'osom', 'Otros', 'ppcc_2.0', 'perd_2.0', 'pyc_2.0'],
         index='año',
@@ -168,8 +135,8 @@ def pt1_trans():
     return pt1_trans
 
 
-def graf_pt1():
-    pt2=pt1()[0]
+def graf_pt1(df_in):
+    pt2=pt1(df_in)[0]
     colores_precios = {'precio_2.0': 'goldenrod', 'precio_3.0': 'darkred', 'precio_6.1': 'blue'}
     graf_pt1=px.line(pt2,x='hora',y=['precio_2.0','precio_3.0','precio_6.1'],
         height=600,
@@ -205,8 +172,8 @@ def graf_pt1():
 
 
 
-def pt5_trans():
-        dffm=aplicar_margen()
+def pt5_trans(df_in):
+        dffm=aplicar_margen(df_in)
         pt3=dffm.pivot_table(
                 values=['precio_2.0'],
                 aggfunc='mean',
