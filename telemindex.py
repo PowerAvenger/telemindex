@@ -65,13 +65,14 @@ tabla_costes = costes_indexado(df_in)
 
 
 ## Layout de la página principal
-st.title("Telemindex 2023-2025 webapp")
+st.title("Telemindex 2023-2025 :orange[e]PowerAPP©")
 st.subheader("Tu aplicación para saber los precios minoristas de indexado")
 st.caption("Copyright by Jose Vidal :ok_hand:")
 url_apps = "https://powerappspy-josevidal.streamlit.app/"
-st.write("Visita mi página de [PowerAPPs](%s) con un montón de utilidades" % url_apps)
-url_bluesky = 'https://bsky.app/profile/poweravenger.bsky.social'
-st.write("Recomienda, comenta y comparte en [Bluesky](%s)")
+st.write("Visita mi página de [ePowerAPPs](%s) con un montón de utilidades" % url_apps)
+url_linkedin = "https://www.linkedin.com/posts/josefvidalsierra_epowerapps-spo2425-telemindex-activity-7281942697399967744-IpFK?utm_source=share&utm_medium=member_deskto"
+url_bluesky = "https://bsky.app/profile/poweravenger.bsky.social"
+st.markdown(f"Deja tus comentarios y propuestas en mi perfil de [Linkedin]({url_linkedin}) - ¡Sígueme en [Bluesky]({url_bluesky})!")
 
 col1, col2 = st.columns([.7,.3])
 
