@@ -14,32 +14,54 @@ st.set_page_config(
     )
 
 
-# Inicializamos variables
+
 if 'año_seleccionado' not in st.session_state:
     st.session_state.año_seleccionado = 2025
 if 'mes_seleccionado' not in st.session_state: 
     st.session_state.mes_seleccionado = None
-if 'margen' not in st.session_state: 
-    st.session_state.margen = 0
-
 
 # Cargamos datos
 df_in = leer_excel()
 df_filtrado, max_reg, lista_meses = filtrar_mes(df_in)
 
+if 'texto_precios' not in st.session_state:
+    st.session_state.texto_precios = f'Año {st.session_state.año_seleccionado}, hasta el día {max_reg}'
+
+
+
+def cambiar_texto_precios():
+    if st.session_state.rango_temporal =='Por meses' : 
+        #st.sidebar.selectbox('Seleccionar mes', lista_meses, key = 'mes_seleccionado')
+        st.session_state.texto_precios = f'Seleccionado: {st.session_state.mes_seleccionado} de {st.session_state.año_seleccionado}'
+    elif st.session_state.rango_temporal == 'Año completo':
+        #st.session_state.mes_seleccionado = None  
+        st.session_state.texto_precios = f'Año {st.session_state.año_seleccionado}, hasta el día {max_reg}'
+    return 
+# Inicializamos variables
+if 'rango_temporal' not in st.session_state:
+    st.session_state.rango_temporal = 'Año completo'
+    texto_precios=cambiar_texto_precios()
+
+if 'margen' not in st.session_state: 
+    st.session_state.margen = 0
+
+
 #ELEMENTOS DE LA BARRA LATERAL ---------------------------------------------------------------------------------------
 
 st.sidebar.subheader('Opciones')
-st.sidebar.selectbox('Seleccione el año', options = [2025,2024,2023], key = 'año_seleccionado')
+st.sidebar.selectbox('Seleccione el año', options = [2025, 2024, 2023], key = 'año_seleccionado', on_change= cambiar_texto_precios)
 #seleccion del año completo o por meses
-rango = st.sidebar.radio("Seleccionar rango temporal", ['Año completo', 'Por meses'], key = "rango_temporal")
-if rango =='Por meses' : 
+#rango = st.sidebar.radio("Seleccionar rango temporal", ['Año completo', 'Por meses'], key = "rango_temporal")
+st.sidebar.radio("Seleccionar rango temporal", ['Año completo', 'Por meses'], key = "rango_temporal", on_change= cambiar_texto_precios)
+#if rango =='Por meses' : 
+if st.session_state.rango_temporal =='Por meses' :     
     st.sidebar.selectbox('Seleccionar mes', lista_meses, key = 'mes_seleccionado')
-    texto_precios = f'Mes seleccionado: {st.session_state.mes_seleccionado}'
-elif rango == 'Año completo':
+#    texto_precios = f'Mes seleccionado: {st.session_state.mes_seleccionado}'
+#elif rango == 'Año completo':
+elif st.session_state.rango_temporal == 'Año completo':    
     st.session_state.mes_seleccionado = None  
-    texto_precios = f'Año {st.session_state.año_seleccionado}, hasta el día {max_reg}'
-
+#    texto_precios = f'Año {st.session_state.año_seleccionado}, hasta el día {max_reg}'
+cambiar_texto_precios()
 
 if st.sidebar.checkbox('Marca si quieres añadir margen'):
     st.sidebar.slider("Añadir margen al gusto (en €/MWh)", min_value = 0, max_value = 50,value = 0, key = 'margen', on_change = aplicar_margen, args=(df_in,) )
@@ -79,7 +101,7 @@ col1, col2 = st.columns([.7,.3])
 #COLUMNA PRINCIPAL
 with col1:
     st.subheader("Resumen de precios medios minoristas por peaje de acceso. Totales y horarios.", divider='rainbow')
-    st.caption(texto_precios)
+    st.caption(st.session_state.texto_precios)
     with st.container():
         col5, col6,col7,col8=st.columns(4)
         with col5:
@@ -122,8 +144,8 @@ with col2:
         #        tabla_precios.loc[f"precio_{i}", "Media"] - tabla_costes.loc[f"coste_{i}", "Media"] - tabla_margen.loc[f"margen_{i}", "Media"]
         #        )
             
-        texto_precios=f'{texto_precios}. Precios en c€/kWh'
-        st.caption(texto_precios)
+        texto_precios=f'{st.session_state.texto_precios}. Precios en c€/kWh'
+        st.caption(st.session_state.texto_precios)
 
         st.text ('Precios medios de indexado', help='PRECIO MEDIO (FINAL) DE LA ENERGÍA.Suma de costes (energía y ATR)')
         st.dataframe(tabla_precios, use_container_width=True)
