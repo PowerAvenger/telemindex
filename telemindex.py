@@ -79,7 +79,7 @@ media_61 = round(media_61 / 10, 1)
 media_spot = round(media_spot, 2)
 media_ssaa = round(media_ssaa, 2)
 media_combo = media_spot + media_ssaa
-sobrecoste_ssaa = (media_combo / media_spot) - 1
+sobrecoste_ssaa = ((media_combo / media_spot) - 1) * 100
 
 #tabla resumen de costes ATR
 tabla_atr = pt7_trans(df_in)
@@ -116,7 +116,7 @@ with col1:
         with col8:
             st.metric(':green[Precio medio Spot €/MWh]',value=media_spot)
         with col9:
-            st.metric('Precio medio SSAA €/MWh', value = media_ssaa, delta = f'{sobrecoste_ssaa:,.2f}%', delta_color = 'inverse', help= 'Se indica su valor medio y en qué % aumenta el precio medio Spot')
+            st.metric('Precio medio SSAA €/MWh', value = media_ssaa, delta = f'{sobrecoste_ssaa:,.1f}%', delta_color = 'inverse', help= 'Se indica su valor medio y en qué % aumenta el precio medio Spot')
     st.empty()
     st.plotly_chart(graf_pt1(df_in))
     st.empty()
