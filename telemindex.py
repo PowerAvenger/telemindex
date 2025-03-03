@@ -72,11 +72,14 @@ else:
 
 
 #ejecutamos la función para obtener la tabla resumen y precios medios
-tabla_precios, media_20, media_30, media_61, media_spot = pt5_trans(df_in)
+tabla_precios, media_20, media_30, media_61, media_spot, media_ssaa = pt5_trans(df_in)
 media_20 = round(media_20 / 10, 1)
 media_30 = round(media_30 / 10, 1)
 media_61 = round(media_61 / 10, 1)
 media_spot = round(media_spot, 2)
+media_ssaa = round(media_ssaa, 2)
+media_combo = media_spot + media_ssaa
+sobrecoste_ssaa = (media_combo / media_spot) - 1
 
 #tabla resumen de costes ATR
 tabla_atr = pt7_trans(df_in)
@@ -86,7 +89,7 @@ tabla_costes = costes_indexado(df_in)
 
 
 
-## Layout de la página principal
+## LAYOUT DE LA PÁGINA PRINCIPAL+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 st.title("Telemindex 2023-2025 :orange[e]PowerAPP©")
 st.subheader("Tu aplicación para saber los precios minoristas de indexado")
 st.caption("Copyright by Jose Vidal :ok_hand:")
@@ -103,7 +106,7 @@ with col1:
     st.subheader("Resumen de precios medios minoristas por peaje de acceso. Totales y horarios.", divider='rainbow')
     st.caption(st.session_state.texto_precios)
     with st.container():
-        col5, col6,col7,col8=st.columns(4)
+        col5, col6, col7, col8, col9 = st.columns(5)
         with col5:
             st.metric(':orange[Precio medio 2.0]',value=media_20)
         with col6:
@@ -112,6 +115,8 @@ with col1:
             st.metric(':blue[Precio medio 6.1]',value=media_61)
         with col8:
             st.metric(':green[Precio medio Spot €/MWh]',value=media_spot)
+        with col9:
+            st.metric(':lightgreen[Precio medio SSAA €/MWh]', value = media_ssaa, delta = f'{sobrecoste_ssaa:,.2f}%', delta_color = 'inverse', help= 'Se indica su valor medio y en qué % aumenta el precio medio Spot')
     st.empty()
     st.plotly_chart(graf_pt1(df_in))
     st.empty()

@@ -10,6 +10,8 @@ def leer_excel():
     df_in['coste_2.0'] = df_in['precio_2.0'] - df_in['pyc_2.0']
     df_in['coste_3.0'] = df_in['precio_3.0'] - df_in['pyc_3.0']
     df_in['coste_6.1'] = df_in['precio_6.1'] - df_in['pyc_6.1']
+    print('df_in')
+    print(df_in)
     return df_in
 
 orden_meses = {
@@ -32,6 +34,7 @@ def filtrar_mes(df_in):
     
     df_filtrado_año = df_in[df_in['año'] == st.session_state.año_seleccionado]
     df_filtrado_año.set_index('fecha', inplace = True)
+    print ('df_filtrado_año')
     print (df_filtrado_año)
     
     if st.session_state.mes_seleccionado is None: 
@@ -40,6 +43,7 @@ def filtrar_mes(df_in):
         df_filtrado = df_filtrado_año[(df_filtrado_año['año'] == st.session_state.año_seleccionado) & (df_filtrado_año['mes_nombre'] == st.session_state.mes_seleccionado)]
 
     #df_filtrado.set_index('fecha', inplace = True)
+    print ('df_filtrado')
     print (df_filtrado)
     #max_reg = df_filtrado_año.index.max().strftime('%d-%m-%Y')
     max_reg = pd.to_datetime(df_filtrado_año.index.max()).strftime('%d-%m-%Y')
@@ -67,10 +71,10 @@ def aplicar_margen(df_in):
 def pt1(df_in):
     dffm = aplicar_margen(df_in)
     
-    pt1=dffm.pivot_table(
-        values=['spot','precio_2.0','precio_3.0','precio_6.1'],
-        index='hora',
-        aggfunc='mean'
+    pt1 = dffm.pivot_table(
+        values = ['spot', 'ssaa', 'precio_2.0', 'precio_3.0', 'precio_6.1'],
+        index = 'hora',
+        aggfunc = 'mean'
     ).reset_index()
     #print(pt1)
     pt20=dffm.pivot_table(
@@ -86,6 +90,7 @@ def pt1(df_in):
     pt20_trans['componente'] = pt20_trans['componente'].replace({'Otros': 'otros'})
     pt20_trans=pt20_trans.sort_values(by='valor',ascending=False)
     pt20_trans['valor']=round(pt20_trans['valor'],2)
+
     graf20=px.pie(pt20_trans,names='componente',values='valor', hole=.3, color_discrete_sequence=px.colors.sequential.Oranges_r)
     graf20.update_layout(
           title={'text':'Peaje de acceso 2.0','x':.5,'xanchor':'center'}
@@ -141,7 +146,9 @@ def pt1_trans(df_in):
 
 
 def graf_pt1(df_in):
-    pt2=pt1(df_in)[0]
+    pt2 = pt1(df_in)[0]
+    print('pt2')
+    print(pt2)
     colores_precios = {'precio_2.0': 'goldenrod', 'precio_3.0': 'darkred', 'precio_6.1': 'blue'}
     graf_pt1=px.line(pt2,x='hora',y=['precio_2.0','precio_3.0','precio_6.1'],
         height=600,
@@ -169,10 +176,11 @@ def graf_pt1(df_in):
         xaxis=dict(
               tickmode='array',
               tickvals=pt2['hora']
-        )
+        ),
+        barmode = 'stack'
     )
-    graf_pt1 = graf_pt1.add_bar(y=pt2['spot'], name='spot', marker_color='green', width=0.5)
-    
+    graf_pt1 = graf_pt1.add_bar(y = pt2['spot'], name = 'spot', marker_color = 'green', width = 0.5)
+    graf_pt1 = graf_pt1.add_bar(y = pt2['ssaa'], name = 'ssaa', marker_color = 'lightgreen', width = 0.5)
     return graf_pt1
 
 
@@ -196,16 +204,16 @@ def pt5_trans(df_in):
         media_30=dffm['precio_3.0'].mean()
         media_61=dffm['precio_6.1'].mean()
         media_spot=dffm['spot'].mean()
-        precios_medios=[media_20,media_30,media_61]
-        pt5_trans=pt5.transpose()
-        pt5_trans['Media']=precios_medios
-        pt5_trans=pt5_trans.div(10)
-        pt5_trans=pt5_trans.round(1)
+        media_ssaa = dffm['ssaa'].mean()
+        precios_medios = [media_20, media_30, media_61]
+        pt5_trans = pt5.transpose()
+        pt5_trans['Media'] = precios_medios
+        pt5_trans = pt5_trans.div(10)
+        pt5_trans = pt5_trans.round(1)
+        pt5_trans = pt5_trans.apply(pd.to_numeric, errors = 'coerce')
         
-        pt5_trans = pt5_trans.apply(pd.to_numeric, errors='coerce')
-        #pt5_trans = pt5_trans.astype(object).where(pt5_trans.notna(), '')
 
-        return pt5_trans, media_20,media_30,media_61,media_spot
+        return pt5_trans, media_20, media_30, media_61, media_spot, media_ssaa
 
 def costes_indexado(df_in):
         dffm=aplicar_margen(df_in)
