@@ -158,17 +158,17 @@ def graf_pt1(df_in):
         color_discrete_map=colores_precios,
     )
     graf_pt1.update_traces(line=dict(width=4))
-    graf_pt1.add_annotation(
-        dict(
-            font=dict(size=12),
-            x=0.5,
-            y=1.05,
-            showarrow=False,
-            #text=texto_graf,
-            xref="paper",
-            yref="paper"
-        )
-    )
+    #graf_pt1.add_annotation(
+    #    dict(
+    #        font=dict(size=12),
+    #        x=0.5,
+    #        y=1.05,
+    #        showarrow=False,
+    #        #text=texto_graf,
+    #        xref="paper",
+    #        yref="paper"
+    #    )
+    #)
     graf_pt1.update_layout(
         margin=dict(t=100),
         title_font_size=16,
