@@ -116,7 +116,7 @@ with col1:
         with col8:
             st.metric(':green[Precio medio Spot €/MWh]',value=media_spot)
         with col9:
-            st.metric(':lightgreen[Precio medio SSAA €/MWh]', value = media_ssaa, delta = f'{sobrecoste_ssaa:,.2f}%', delta_color = 'inverse', help= 'Se indica su valor medio y en qué % aumenta el precio medio Spot')
+            st.metric('Precio medio SSAA €/MWh', value = media_ssaa, delta = f'{sobrecoste_ssaa:,.2f}%', delta_color = 'inverse', help= 'Se indica su valor medio y en qué % aumenta el precio medio Spot')
     st.empty()
     st.plotly_chart(graf_pt1(df_in))
     st.empty()
